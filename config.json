@@ -1,0 +1,14 @@
+{
+  "parameters": {
+    "irctc_session": {
+      "defaultValue": {
+        "value": "True"
+      }
+    },
+    "paytm_otp": {
+      "defaultValue": {
+        "value": "4578"
+      }
+    }
+  }
+}
