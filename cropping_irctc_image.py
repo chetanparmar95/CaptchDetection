@@ -21,16 +21,3 @@ for (i, captcha_image_file) in enumerate(captcha_image_files):
     width, height = im.size
     im = im.crop((148, 0, width, height))
     im.save(EDITED_CAPTCHA_IMAGE_FOLDER + captcha_correct_text + '.png')
-    
-for (i, captcha_image_file) in enumerate(captcha_image_files):
-    print('Processing image {} out of {}'.format (i + 1, size))
-    filename = os.path.basename(captcha_image_file)
-    captcha_correct_text = os.path.splitext(filename)[0]
-    
-    image = cv2.imread(captcha_image_file)
-    image[np.where((image > (100,100,100)).all(axis = 2))] = [255,255,255]
-    cv2.imwrite(EDITED_CAPTCHA_IMAGE_FOLDER2 + filename , image)
-    
-    
-img = cv2.imread('0000011.png.png')
-print(img[0,0])

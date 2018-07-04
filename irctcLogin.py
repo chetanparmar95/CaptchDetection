@@ -40,7 +40,47 @@ def changeColor():
     image[np.where((image == image[0,0]).all(axis = 2))] = [255,255,255]
     image[np.where((image > (100,100,100)).all(axis = 2))] = [255,255,255]
     cv2.imwrite('screenshot.png', image)
- 
+
+def makePrediction():
+    predictions = predictImage("screenshot.png")
+    return predictions
+
+def simpleCaptcha():
+    imgLink = driver.find_element_by_class_name('captcha-img').get_attribute("src")
+    request.urlretrieve(imgLink, 'screenshot.png')
+    image = cv2.imread('screenshot.png')
+    print(image[0][0])
+    image[np.where((image > (128,128,128)).all(axis = 2))] = (255,0,255)
+    image[np.where((image < (128,128,128)).all(axis = 2))] = (255,255,255)
+    cv2.imwrite('screenshot.png', image)
+    return makePrediction()
+
+def nlpCaptcha():
+    imgLink = driver.find_element_by_id('nlpCaptchaImg').get_attribute("src")
+    if imgLink.find('theme1') != -1:
+        imgLink = imgLink.split('theme1')[0] + 'banner'
+    request.urlretrieve(imgLink, 'screenshot.png')
+    cropImage()
+    changeColor()
+    return makePrediction()
+
+def captchaPrediction():
+    captchaAnswer = 'captcha'
+    predictions = None
+    try: 
+        WebDriverWait(driver, 2).until(EC.visibility_of_element_located((By.CLASS_NAME, "captcha-img")))
+        predictions = simpleCaptcha()
+    except TimeoutException:
+        try: 
+            WebDriverWait(driver, 2).until(EC.visibility_of_element_located((By.ID, "nlpCaptchaImg")))
+            predictions = nlpCaptcha()
+            captchaAnswer = 'nlpAnswer'
+        except TimeoutException:
+            print('unable to find captcha image source file')
+            
+    captcha = driver.find_element_by_id(captchaAnswer)
+    captcha.send_keys(predictions)
+    
 driver = webdriver.Firefox(executable_path = 'geckodriver.exe') # if you want to use chrome, replace Firefox() with Chrome()
 driver.get("https://www.irctc.co.in/nget/train-search")
 
@@ -59,41 +99,7 @@ user_name.send_keys("agamParekh")
 password = driver.find_element_by_name('pwd')
 password.send_keys("Irctcpass1")
 
-captchaAnswer = 'captcha'
-
-
-try: 
-    WebDriverWait(driver, 5).until(EC.visibility_of_element_located((By.CLASS_NAME, "captcha-img")))
-    print("ui-inputtext exist")
-except TimeoutException:
-    print(idName + ' doesnot exist')
-
-
-# simple captcha
-imgLink = driver.find_element_by_class_name('captcha-img').get_attribute("src")
-request.urlretrieve(imgLink, 'screenshot.png')
-image = cv2.imread('screenshot.png')
-print(image[0][0])
-image[np.where((image > (128,128,128)).all(axis = 2))] = (255,0,255)
-image[np.where((image < (128,128,128)).all(axis = 2))] = (255,255,255)
-cv2.imwrite('screenshot.png', image)
-
-# nlp captcha
-#imgLink = driver.find_element_by_id('nlpCaptchaImg').get_attribute("src")
-#if imgLink.find('theme1') != -1:
-#    imgLink = imgLink.split('theme1')[0] + 'banner'
-#request.urlretrieve(imgLink, 'screenshot.png')
-cropImage()
-changeColor()
-#captchaAnswer = 'nlpAnswer'
-
-
-
-predictions = predictImage("screenshot.png")
-print(predictions)
-
-captcha = driver.find_element_by_id(captchaAnswer)
-captcha.send_keys(predictions)
+captchaPrediction()
 
 driver.find_elements_by_xpath("//*[contains(text(), 'SIGN IN')]")[0].click()
 
@@ -114,7 +120,7 @@ fromStation.send_keys('SONGADH - SGD')
 
 date = driver.find_element_by_xpath("//input[@placeholder='Journey Date(dd-mm-yyyy)*']")
 date.clear()
-date.send_keys('20-07-2018')
+date.send_keys('21-07-2018')
 
 search = driver.find_elements_by_class_name('search_btn')[0]
 search.click()
@@ -193,21 +199,10 @@ select_gender = Select(driver.find_element_by_class_name(classGender))
 #Male 1 Female 2
 select_gender.select_by_index(1)
 
-driver.find_element_by_xpath('//*[@title="Refresh:I need another Option"]').click();
-driver.find_element_by_xpath(".//input[contains(@onclick, 'nlpAjaxCaptcha')]")
+# not working for refreshingt
+driver.find_element_by_xpath("//div[@class='nlpRefresh' and contains(@onclick,'nlpAjaxCaptcha')]").click()
 
-imgLink = driver.find_element_by_class_name('captcha-img').get_attribute("src")
-request.urlretrieve(imgLink, 'screenshot.png')
-image = cv2.imread('screenshot.png')
-print(image[0][0])
-image[np.where((image > (128,128,128)).all(axis = 2))] = (255,0,255)
-image[np.where((image < (128,128,128)).all(axis = 2))] = (255,255,255)
-cv2.imwrite('a.png', image)
-predictions = predictImage("a.png")
-print(predictions)
-captcha = driver.find_element_by_id('captcha')
-captcha.send_keys(predictions)
-
+captchaPrediction()
 driver.find_elements_by_xpath("//*[contains(text(), 'Continue Booking ')]")[0].click()
 
 
@@ -221,7 +216,7 @@ firebase_admin.initialize_app(cred, {
 })
 
 root = db.reference()
-root.child('paytm').update({'session' : False})
+root.child('paytm').update({'session' : True})
 
 #Payment
 driver.find_element_by_link_text('Wallets / Cash Card').click()

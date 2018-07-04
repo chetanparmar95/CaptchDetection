@@ -2,9 +2,9 @@
 
 import requests
 print(str(10).zfill(5))
-main_folder = 'E:\\Aagam\\Project\\solving_captchas_code_examples\\solving_captchas_code_examples\\irctc images\\'
+main_folder = '\\irctc images\\'
 
-for i in range(2001,5000):
+for i in range(1,10):
     print("Progress:" + str(i) )
     filedata = requests.get('https://www.irctc.co.in/eticketing/captchaImage?0.8083772336514661')
     
